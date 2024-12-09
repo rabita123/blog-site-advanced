@@ -6,6 +6,7 @@ const connectDB = require('./config/db');
 const postRoutes = require('./routes/posts');
 const authRoutes = require('./routes/auth');
 const commentRoutes = require('./routes/comments');
+const metricsRoutes = require('./routes/metrics');
 
 const app = express();
 
@@ -50,6 +51,7 @@ app.get('/', (req, res) => {
 app.use('/api/posts/:postId/comments', commentRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/auth', authRoutes);
+app.use('/api/metrics', metricsRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

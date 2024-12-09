@@ -1,42 +1,185 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import axios from '../utils/axios';
+import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import {
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
+  BarChart, Bar, PieChart, Pie, Cell
+} from 'recharts';
+
+// MUI Components
+import {
+  Box, Drawer, AppBar, Toolbar, Typography, IconButton,
+  List, ListItem, ListItemIcon, ListItemText, Grid,
+  Paper, Button, Menu, MenuItem, Divider
+} from '@mui/material';
+
+// MUI Icons
+import {
+  Menu as MenuIcon,
+  Dashboard as DashboardIcon,
+  Article as ArticleIcon,
+  People as PeopleIcon,
+  Settings as SettingsIcon,
+  Add as AddIcon,
+  MoreVert as MoreVertIcon
+} from '@mui/icons-material';
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
 function AdminDashboard() {
+  const { user } = useAuth();
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const [posts, setPosts] = useState([]);
+  const [metrics, setMetrics] = useState({
+    totalViews: 0,
+    totalLikes: 0,
+    totalComments: 0,
+    viewsByDay: [],
+    postsByCategory: [],
+    recentActivity: []
+  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [widgets, setWidgets] = useState([
+    { id: 'stats', title: 'Quick Stats' },
+    { id: 'views', title: 'Views Over Time' },
+    { id: 'categories', title: 'Posts by Category' },
+    { id: 'recent', title: 'Recent Activity' }
+  ]);
 
   useEffect(() => {
-    fetchPosts();
+    fetchDashboardData();
   }, []);
 
-  const fetchPosts = async () => {
+  const fetchDashboardData = async () => {
     try {
-      const response = await axios.get('/api/posts');
-      setPosts(response.data.posts || []);
+      const [postsRes, metricsRes] = await Promise.all([
+        axios.get('/api/posts'),
+        axios.get('/api/metrics') // You'll need to create this endpoint
+      ]);
+
+      setPosts(postsRes.data.posts);
+      setMetrics(metricsRes.data);
       setLoading(false);
     } catch (err) {
-      setError('Failed to fetch posts');
+      setError('Failed to fetch dashboard data');
       setLoading(false);
-      console.error('Error fetching posts:', err);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('Are you sure you want to delete this post?')) {
-      try {
-        await axios.delete(`/api/posts/${id}`);
-        setPosts(posts.filter(post => post._id !== id));
-      } catch (err) {
-        console.error('Error deleting post:', err);
-        if (err.response?.status === 401) {
-          alert('Your session has expired. Please login again.');
-          // Optionally redirect to login page
-        } else {
-          alert('Failed to delete post. ' + (err.response?.data?.message || 'Please try again.'));
-        }
-      }
+  const handleDragEnd = (result) => {
+    if (!result.destination) return;
+
+    const items = Array.from(widgets);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    setWidgets(items);
+  };
+
+  const renderWidget = (widget) => {
+    switch (widget.id) {
+      case 'stats':
+        return (
+          <Paper className="p-4">
+            <Typography variant="h6" className="mb-4">Quick Stats</Typography>
+            <Grid container spacing={3}>
+              <Grid item xs={4}>
+                <div className="text-center">
+                  <Typography variant="h4">{metrics.totalViews}</Typography>
+                  <Typography variant="body2" color="textSecondary">Total Views</Typography>
+                </div>
+              </Grid>
+              <Grid item xs={4}>
+                <div className="text-center">
+                  <Typography variant="h4">{metrics.totalLikes}</Typography>
+                  <Typography variant="body2" color="textSecondary">Total Likes</Typography>
+                </div>
+              </Grid>
+              <Grid item xs={4}>
+                <div className="text-center">
+                  <Typography variant="h4">{metrics.totalComments}</Typography>
+                  <Typography variant="body2" color="textSecondary">Comments</Typography>
+                </div>
+              </Grid>
+            </Grid>
+          </Paper>
+        );
+
+      case 'views':
+        return (
+          <Paper className="p-4">
+            <Typography variant="h6" className="mb-4">Views Over Time</Typography>
+            <div style={{ height: 300 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={metrics.viewsByDay}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" />
+                  <YAxis />
+                  <Tooltip />
+                  <Line type="monotone" dataKey="views" stroke="#8884d8" />
+                </LineChart>
+              </ResponsiveContainer>
+            </div>
+          </Paper>
+        );
+
+      case 'categories':
+        return (
+          <Paper className="p-4">
+            <Typography variant="h6" className="mb-4">Posts by Category</Typography>
+            <div style={{ height: 300 }}>
+              <ResponsiveContainer width="100%" height="100%">
+                <PieChart>
+                  <Pie
+                    data={metrics.postsByCategory}
+                    dataKey="value"
+                    nameKey="name"
+                    cx="50%"
+                    cy="50%"
+                    outerRadius={80}
+                    label
+                  >
+                    {metrics.postsByCategory.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            </div>
+          </Paper>
+        );
+
+      case 'recent':
+        return (
+          <Paper className="p-4">
+            <Typography variant="h6" className="mb-4">Recent Posts</Typography>
+            <div className="space-y-4">
+              {posts.slice(0, 5).map((post) => (
+                <div key={post._id} className="flex justify-between items-center">
+                  <div>
+                    <Typography variant="subtitle2">{post.title}</Typography>
+                    <Typography variant="caption" color="textSecondary">
+                      {new Date(post.createdAt).toLocaleDateString()}
+                    </Typography>
+                  </div>
+                  <Link
+                    to={`/admin/edit/${post._id}`}
+                    className="text-blue-500 hover:text-blue-600"
+                  >
+                    Edit
+                  </Link>
+                </div>
+              ))}
+            </div>
+          </Paper>
+        );
+
+      default:
+        return null;
     }
   };
 
@@ -48,97 +191,102 @@ function AdminDashboard() {
     );
   }
 
-  if (error) {
-    return (
-      <div className="text-center py-10">
-        <p className="text-red-500">{error}</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="container mx-auto px-4 py-8">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 space-y-4 sm:space-y-0">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Manage Posts</h1>
-        <Link
-          to="/admin/new-post"
-          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center sm:justify-start"
-        >
-          <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
-          </svg>
-          New Post
-        </Link>
-      </div>
+    <Box sx={{ display: 'flex' }}>
+      {/* Drawer */}
+      <Drawer
+        variant="temporary"
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        sx={{
+          width: 240,
+          flexShrink: 0,
+          '& .MuiDrawer-paper': {
+            width: 240,
+            boxSizing: 'border-box',
+          },
+        }}
+      >
+        <List>
+          <ListItem button>
+            <ListItemIcon><DashboardIcon /></ListItemIcon>
+            <ListItemText primary="Dashboard" />
+          </ListItem>
+          <ListItem button component={Link} to="/admin/new-post">
+            <ListItemIcon><ArticleIcon /></ListItemIcon>
+            <ListItemText primary="Posts" />
+          </ListItem>
+          <ListItem button>
+            <ListItemIcon><PeopleIcon /></ListItemIcon>
+            <ListItemText primary="Users" />
+          </ListItem>
+          <ListItem button>
+            <ListItemIcon><SettingsIcon /></ListItemIcon>
+            <ListItemText primary="Settings" />
+          </ListItem>
+        </List>
+      </Drawer>
 
-      <div className="bg-white rounded-lg shadow overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
-              <tr>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Title
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Author
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Category
-                </th>
-                <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Created At
-                </th>
-                <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {posts.map((post) => (
-                <tr key={post._id} className="hover:bg-gray-50">
-                  <td className="px-4 sm:px-6 py-4 whitespace-normal sm:whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900 line-clamp-2 sm:line-clamp-1">
-                      {post.title}
-                    </div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm text-gray-500">{post.author}</div>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
-                      {post.category}
-                    </span>
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                    {new Date(post.createdAt).toLocaleDateString()}
-                  </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                    <div className="flex justify-end space-x-2">
-                      <Link
-                        to={`/admin/edit/${post._id}`}
-                        className="text-indigo-600 hover:text-indigo-900"
+      {/* Main content */}
+      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+        <AppBar position="static" color="default" elevation={0}>
+          <Toolbar>
+            <IconButton
+              edge="start"
+              color="inherit"
+              onClick={() => setDrawerOpen(true)}
+              sx={{ mr: 2, display: { sm: 'none' } }}
+            >
+              <MenuIcon />
+            </IconButton>
+            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+              Dashboard
+            </Typography>
+            <Button
+              component={Link}
+              to="/admin/new-post"
+              startIcon={<AddIcon />}
+              variant="contained"
+              color="primary"
+            >
+              New Post
+            </Button>
+          </Toolbar>
+        </AppBar>
+
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <Droppable droppableId="widgets">
+            {(provided) => (
+              <Grid
+                container
+                spacing={3}
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+                className="mt-4"
+              >
+                {widgets.map((widget, index) => (
+                  <Draggable key={widget.id} draggableId={widget.id} index={index}>
+                    {(provided) => (
+                      <Grid
+                        item
+                        xs={12}
+                        md={widget.id === 'stats' ? 12 : 6}
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        {...provided.dragHandleProps}
                       >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
-                        </svg>
-                      </Link>
-                      <button
-                        onClick={() => handleDelete(post._id)}
-                        className="text-red-600 hover:text-red-900"
-                      >
-                        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                        </svg>
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
+                        {renderWidget(widget)}
+                      </Grid>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+              </Grid>
+            )}
+          </Droppable>
+        </DragDropContext>
+      </Box>
+    </Box>
   );
 }
 

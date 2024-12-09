@@ -9,6 +9,7 @@ import Login from './pages/Login';
 import SignUp from './pages/SignUp';
 import PrivateRoute from './components/PrivateRoute';
 import { AuthProvider } from './context/AuthContext';
+import ManagePosts from './pages/ManagePosts';
 
 function App() {
   return (
@@ -45,6 +46,14 @@ function App() {
                 element={
                   <PrivateRoute>
                     <EditPost />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/admin/manage-posts"
+                element={
+                  <PrivateRoute>
+                    <ManagePosts />
                   </PrivateRoute>
                 }
               />
