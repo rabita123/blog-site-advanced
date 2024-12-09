@@ -14,7 +14,7 @@ function AdminDashboard() {
   const fetchPosts = async () => {
     try {
       const response = await axios.get('http://localhost:3000/api/posts');
-      setPosts(response.data);
+      setPosts(response.data.posts || []);
       setLoading(false);
     } catch (err) {
       setError('Failed to fetch posts');

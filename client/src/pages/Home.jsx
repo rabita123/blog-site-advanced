@@ -9,20 +9,32 @@ function Home() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('');
   const [categories, setCategories] = useState([]);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalPosts: 0
+  });
 
-  // Fetch posts with search and filter
-  const fetchPosts = async (search = '', category = '') => {
+  // Fetch posts with search, filter, and pagination
+  const fetchPosts = async (search = '', category = '', page = 1) => {
     try {
       setLoading(true);
       const params = new URLSearchParams();
       if (search) params.append('search', search);
       if (category) params.append('category', category);
+      params.append('page', page);
+      params.append('limit', 6);
 
       const response = await axios.get(`http://localhost:3000/api/posts?${params.toString()}`);
-      setPosts(response.data);
+      setPosts(response.data.posts);
+      setPagination({
+        currentPage: response.data.currentPage,
+        totalPages: response.data.totalPages,
+        totalPosts: response.data.totalPosts
+      });
 
-      // Extract unique categories from posts
-      const uniqueCategories = [...new Set(response.data.map(post => post.category))];
+      // Extract unique categories
+      const uniqueCategories = [...new Set(response.data.posts.map(post => post.category))];
       setCategories(uniqueCategories);
     } catch (err) {
       setError('Failed to fetch posts');
@@ -33,8 +45,12 @@ function Home() {
   };
 
   useEffect(() => {
-    fetchPosts(searchTerm, selectedCategory);
+    fetchPosts(searchTerm, selectedCategory, 1); // Reset to page 1 when filters change
   }, [searchTerm, selectedCategory]);
+
+  const handlePageChange = (newPage) => {
+    fetchPosts(searchTerm, selectedCategory, newPage);
+  };
 
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
@@ -100,12 +116,57 @@ function Home() {
           </div>
         </div>
 
-        {/* Results count */}
-        <p className="text-sm text-gray-600">
-          Showing {posts.length} {posts.length === 1 ? 'post' : 'posts'}
-          {searchTerm && ` for "${searchTerm}"`}
-          {selectedCategory && ` in ${selectedCategory}`}
-        </p>
+        {/* Results count and pagination info */}
+        <div className="mb-8 flex flex-col sm:flex-row sm:justify-between items-center">
+          <p className="text-sm text-gray-600 mb-4 sm:mb-0">
+            Showing {posts.length} of {pagination.totalPosts} posts
+            {searchTerm && ` for "${searchTerm}"`}
+            {selectedCategory && ` in ${selectedCategory}`}
+          </p>
+
+          {/* Pagination Controls */}
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => handlePageChange(pagination.currentPage - 1)}
+              disabled={pagination.currentPage === 1}
+              className={`px-3 py-1 rounded-md ${
+                pagination.currentPage === 1
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-blue-500 text-white hover:bg-blue-600'
+              }`}
+            >
+              Previous
+            </button>
+            
+            <div className="flex items-center space-x-1">
+              {[...Array(pagination.totalPages)].map((_, index) => (
+                <button
+                  key={index + 1}
+                  onClick={() => handlePageChange(index + 1)}
+                  className={`px-3 py-1 rounded-md ${
+                    pagination.currentPage === index + 1
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                  }`}
+                >
+                  {index + 1}
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => handlePageChange(pagination.currentPage + 1)}
+              disabled={pagination.currentPage === pagination.totalPages}
+              className={`px-3 py-1 rounded-md ${
+                pagination.currentPage === pagination.totalPages
+                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                  : 'bg-blue-500 text-white hover:bg-blue-600'
+              }`}
+            >
+              Next
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Posts Grid */}
@@ -154,6 +215,51 @@ function Home() {
           ))}
         </div>
       )}
+
+      {/* Bottom Pagination */}
+      <div className="mt-8 flex justify-center">
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => handlePageChange(pagination.currentPage - 1)}
+            disabled={pagination.currentPage === 1}
+            className={`px-3 py-1 rounded-md ${
+              pagination.currentPage === 1
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-blue-500 text-white hover:bg-blue-600'
+            }`}
+          >
+            Previous
+          </button>
+          
+          <div className="flex items-center space-x-1">
+            {[...Array(pagination.totalPages)].map((_, index) => (
+              <button
+                key={index + 1}
+                onClick={() => handlePageChange(index + 1)}
+                className={`px-3 py-1 rounded-md ${
+                  pagination.currentPage === index + 1
+                    ? 'bg-blue-500 text-white'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {index + 1}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={() => handlePageChange(pagination.currentPage + 1)}
+            disabled={pagination.currentPage === pagination.totalPages}
+            className={`px-3 py-1 rounded-md ${
+              pagination.currentPage === pagination.totalPages
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-blue-500 text-white hover:bg-blue-600'
+            }`}
+          >
+            Next
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

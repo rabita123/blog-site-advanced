@@ -3,18 +3,18 @@ const router = express.Router();
 const Post = require('../models/Post');
 const auth = require('../middleware/auth');
 
-// GET /api/posts - Fetch all posts with search and filter
+// GET /api/posts - Fetch all posts with search, filter, and pagination
 router.get('/', async (req, res) => {
   try {
-    const { search, category } = req.query;
+    const { search, category, page = 1, limit = 6 } = req.query;
     let query = {};
 
     // Build search query
     if (search) {
       query = {
         $or: [
-          { title: { $regex: search, $options: 'i' } },  // Case-insensitive title search
-          { content: { $regex: search, $options: 'i' } } // Case-insensitive content search
+          { title: { $regex: search, $options: 'i' } },
+          { content: { $regex: search, $options: 'i' } }
         ]
       };
     }
@@ -24,8 +24,25 @@ router.get('/', async (req, res) => {
       query.category = category;
     }
 
-    const posts = await Post.find(query).sort({ createdAt: -1 });
-    res.json(posts);
+    // Calculate skip value for pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    // Get total count for pagination
+    const total = await Post.countDocuments(query);
+
+    // Fetch paginated posts
+    const posts = await Post.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    // Send pagination metadata
+    res.json({
+      posts,
+      currentPage: parseInt(page),
+      totalPages: Math.ceil(total / parseInt(limit)),
+      totalPosts: total
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
