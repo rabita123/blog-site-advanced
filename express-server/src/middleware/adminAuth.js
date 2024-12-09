@@ -1,22 +1,26 @@
 const jwt = require('jsonwebtoken');
 
-const auth = async (req, res, next) => {
+const adminAuth = async (req, res, next) => {
   try {
+    // Get token from header
     const token = req.header('Authorization')?.replace('Bearer ', '');
     
     if (!token) {
       return res.status(401).json({ message: 'No authentication token, access denied' });
     }
 
+    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET || 'your-secret-key');
     
-    // Add user info to request
-    req.user = {
-      userId: decoded.userId,
-      role: decoded.role,
-      username: decoded.username
-    };
+    // Check if user is admin
+    if (decoded.role !== 'admin') {
+      return res.status(403).json({ 
+        message: 'Access denied. Admin privileges required.' 
+      });
+    }
 
+    // Add user data to request
+    req.user = decoded;
     next();
   } catch (error) {
     if (error.name === 'JsonWebTokenError') {
@@ -29,4 +33,4 @@ const auth = async (req, res, next) => {
   }
 };
 
-module.exports = auth; 
+module.exports = adminAuth; 

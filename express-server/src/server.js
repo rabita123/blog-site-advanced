@@ -5,6 +5,7 @@ const mongoose = require('mongoose');
 const connectDB = require('./config/db');
 const postRoutes = require('./routes/posts');
 const authRoutes = require('./routes/auth');
+const commentRoutes = require('./routes/comments');
 
 const app = express();
 
@@ -46,6 +47,7 @@ app.get('/', (req, res) => {
 });
 
 // Routes
+app.use('/api/posts/:postId/comments', commentRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/auth', authRoutes);
 

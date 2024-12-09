@@ -110,46 +110,81 @@ router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate required fields
+    // Validate input
     if (!email || !password) {
-      return res.status(400).json({ 
-        message: 'Email and password are required' 
+      return res.status(400).json({
+        success: false,
+        message: 'Email and password are required'
       });
     }
 
     // Find user by email
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({ 
-        message: 'Invalid credentials' 
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
       });
     }
 
     // Verify password
     const isValidPassword = await user.comparePassword(password);
     if (!isValidPassword) {
-      return res.status(401).json({ 
-        message: 'Invalid credentials' 
+      return res.status(401).json({
+        success: false,
+        message: 'Invalid credentials'
       });
     }
 
-    // Generate JWT token
+    // Generate JWT token with user info and role
     const token = jwt.sign(
-      { userId: user._id, role: user.role },
+      {
+        userId: user._id,
+        email: user.email,
+        username: user.username,
+        role: user.role,
+        permissions: user.role === 'admin' ? [
+          'create_post',
+          'edit_post',
+          'delete_post',
+          'manage_users'
+        ] : [
+          'read_post',
+          'comment_post'
+        ]
+      },
       process.env.JWT_SECRET || 'your-secret-key',
       { expiresIn: '24h' }
     );
 
+    // Send success response
     res.json({
+      success: true,
       message: 'Login successful',
       token,
-      user
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        createdAt: user.createdAt,
+        permissions: user.role === 'admin' ? [
+          'create_post',
+          'edit_post',
+          'delete_post',
+          'manage_users'
+        ] : [
+          'read_post',
+          'comment_post'
+        ]
+      }
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ 
+    res.status(500).json({
+      success: false,
       message: 'Error logging in',
-      error: error.message 
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error'
     });
   }
 });

@@ -2,6 +2,11 @@ const express = require('express');
 const router = express.Router();
 const Post = require('../models/Post');
 const auth = require('../middleware/auth');
+const checkRole = require('../middleware/checkRole');
+const upload = require('../config/multer');
+
+// Serve static files
+router.use('/uploads', express.static('public/uploads'));
 
 // GET /api/posts - Fetch all posts with search, filter, and pagination
 router.get('/', async (req, res) => {
@@ -64,72 +69,80 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// POST /api/posts - Create a new post
-router.post('/', auth, async (req, res) => {
-  try {
-    const { title, content, author, category } = req.body;
+// Protected routes - Admin only
+router.post('/', 
+  auth, 
+  checkRole(['admin']), 
+  upload.single('image'), 
+  async (req, res) => {
+    try {
+      const { title, content, author, category } = req.body;
 
-    // Validate required fields
-    if (!title || !content) {
-      return res.status(400).json({ message: 'Title and content are required' });
+      if (!title || !content) {
+        return res.status(400).json({ message: 'Title and content are required' });
+      }
+
+      const post = new Post({
+        title,
+        content,
+        author: author || req.user.username,
+        category,
+        image: req.file ? `/api/posts/uploads/${req.file.filename}` : null
+      });
+
+      const savedPost = await post.save();
+      res.status(201).json(savedPost);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
     }
-
-    const post = new Post({
-      title,
-      content,
-      author,
-      category
-    });
-
-    const savedPost = await post.save();
-    res.status(201).json(savedPost);
-  } catch (error) {
-    res.status(400).json({ message: error.message });
-  }
 });
 
-// PUT /api/posts/:id - Update a post
-router.put('/:id', auth, async (req, res) => {
-  try {
-    const { title, content, author, category } = req.body;
-    
-    const post = await Post.findById(req.params.id);
-    if (!post) {
-      return res.status(404).json({ message: 'Post not found' });
-    }
+// PUT /api/posts/:id - Update a post with image
+router.put('/:id', 
+  auth, 
+  checkRole(['admin']), 
+  upload.single('image'), 
+  async (req, res) => {
+    try {
+      const { title, content, author, category } = req.body;
+      
+      const post = await Post.findById(req.params.id);
+      if (!post) {
+        return res.status(404).json({ message: 'Post not found' });
+      }
 
-    // Update fields if provided
-    if (title) post.title = title;
-    if (content) post.content = content;
-    if (author) post.author = author;
-    if (category) post.category = category;
+      // Update fields
+      if (title) post.title = title;
+      if (content) post.content = content;
+      if (author) post.author = author;
+      if (category) post.category = category;
+      if (req.file) {
+        post.image = `/api/posts/uploads/${req.file.filename}`;
+      }
 
-    const updatedPost = await post.save();
-    res.json(updatedPost);
-  } catch (error) {
-    if (error.kind === 'ObjectId') {
-      return res.status(400).json({ message: 'Invalid post ID' });
+      const updatedPost = await post.save();
+      res.json(updatedPost);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
     }
-    res.status(400).json({ message: error.message });
-  }
 });
 
 // DELETE /api/posts/:id - Delete a post
-router.delete('/:id', auth, async (req, res) => {
-  try {
-    const post = await Post.findById(req.params.id);
-    if (!post) {
-      return res.status(404).json({ message: 'Post not found' });
-    }
+router.delete('/:id', 
+  auth, 
+  checkRole(['admin']), 
+  async (req, res) => {
+    try {
+      const post = await Post.findById(req.params.id);
+      if (!post) {
+        return res.status(404).json({ message: 'Post not found' });
+      }
 
-    await post.remove();
-    res.json({ message: 'Post deleted successfully' });
-  } catch (error) {
-    if (error.kind === 'ObjectId') {
-      return res.status(400).json({ message: 'Invalid post ID' });
+      await post.remove();
+      res.json({ message: 'Post deleted successfully' });
+    } catch (error) {
+      res.status(500).json({ message: error.message });
     }
-    res.status(500).json({ message: error.message });
-  }
 });
 
 module.exports = router; 

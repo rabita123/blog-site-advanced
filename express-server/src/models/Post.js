@@ -10,6 +10,10 @@ const postSchema = new mongoose.Schema({
     type: String,
     required: [true, 'Content is required']
   },
+  image: {
+    type: String,
+    default: null
+  },
   author: {
     type: String,
     default: 'Anonymous'

@@ -7,25 +7,52 @@ import NewPost from './pages/NewPost';
 import EditPost from './pages/EditPost';
 import Login from './pages/Login';
 import SignUp from './pages/SignUp';
+import PrivateRoute from './components/PrivateRoute';
+import { AuthProvider } from './context/AuthContext';
 
 function App() {
   return (
-    <Router>
-      <div className="min-h-screen bg-gray-100">
-        <Navbar />
-        <main className="container mx-auto px-4 py-8">
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/post/:id" element={<PostDetails />} />
-            <Route path="/admin" element={<AdminDashboard />} />
-            <Route path="/admin/new-post" element={<NewPost />} />
-            <Route path="/admin/edit/:id" element={<EditPost />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<SignUp />} />
-          </Routes>
-        </main>
-      </div>
-    </Router>
+    <AuthProvider>
+      <Router>
+        <div className="min-h-screen bg-gray-100">
+          <Navbar />
+          <main className="container mx-auto px-4 py-8">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/post/:id" element={<PostDetails />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<SignUp />} />
+              
+              {/* Protected Routes */}
+              <Route
+                path="/admin"
+                element={
+                  <PrivateRoute>
+                    <AdminDashboard />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/admin/new-post"
+                element={
+                  <PrivateRoute>
+                    <NewPost />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/admin/edit/:id"
+                element={
+                  <PrivateRoute>
+                    <EditPost />
+                  </PrivateRoute>
+                }
+              />
+            </Routes>
+          </main>
+        </div>
+      </Router>
+    </AuthProvider>
   );
 }
 

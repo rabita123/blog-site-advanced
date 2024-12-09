@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../utils/axios';
 
 function PostForm({ initialData, mode = 'create' }) {
   const navigate = useNavigate();
@@ -10,6 +10,8 @@ function PostForm({ initialData, mode = 'create' }) {
     author: initialData?.author || '',
     category: initialData?.category || ''
   });
+  const [image, setImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(initialData?.image || null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -20,20 +22,37 @@ function PostForm({ initialData, mode = 'create' }) {
     });
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      setImage(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
     try {
+      const formDataWithImage = new FormData();
+      Object.keys(formData).forEach(key => {
+        formDataWithImage.append(key, formData[key]);
+      });
+      if (image) {
+        formDataWithImage.append('image', image);
+      }
+
       if (mode === 'create') {
-        await axios.post('http://localhost:3000/api/posts', formData);
+        await axios.post('/api/posts', formDataWithImage);
       } else {
-        await axios.put(`http://localhost:3000/api/posts/${initialData._id}`, formData);
+        await axios.put(`/api/posts/${initialData._id}`, formDataWithImage);
       }
       navigate('/admin');
     } catch (err) {
       setError(err.response?.data?.message || `Failed to ${mode} post`);
+    } finally {
       setLoading(false);
     }
   };
@@ -58,7 +77,7 @@ function PostForm({ initialData, mode = 'create' }) {
         </div>
       )}
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-6" encType="multipart/form-data">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Title
@@ -121,6 +140,37 @@ function PostForm({ initialData, mode = 'create' }) {
             <option value="Database">Database</option>
             <option value="Security">Security</option>
           </select>
+        </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-2">
+            Post Image
+          </label>
+          <input
+            type="file"
+            accept="image/*"
+            onChange={handleImageChange}
+            className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+          />
+          {imagePreview && (
+            <div className="mt-2">
+              <img
+                src={imagePreview}
+                alt="Preview"
+                className="max-h-48 rounded-lg shadow-sm"
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  setImage(null);
+                  setImagePreview(null);
+                }}
+                className="mt-2 text-red-500 hover:text-red-700"
+              >
+                Remove Image
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="flex justify-end">
