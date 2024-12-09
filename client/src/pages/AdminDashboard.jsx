@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../utils/axios';
 
 function AdminDashboard() {
   const [posts, setPosts] = useState([]);
@@ -13,7 +13,7 @@ function AdminDashboard() {
 
   const fetchPosts = async () => {
     try {
-      const response = await axios.get('http://localhost:3000/api/posts');
+      const response = await axios.get('/api/posts');
       setPosts(response.data.posts || []);
       setLoading(false);
     } catch (err) {
@@ -26,11 +26,16 @@ function AdminDashboard() {
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this post?')) {
       try {
-        await axios.delete(`http://localhost:3000/api/posts/${id}`);
+        await axios.delete(`/api/posts/${id}`);
         setPosts(posts.filter(post => post._id !== id));
       } catch (err) {
         console.error('Error deleting post:', err);
-        alert('Failed to delete post');
+        if (err.response?.status === 401) {
+          alert('Your session has expired. Please login again.');
+          // Optionally redirect to login page
+        } else {
+          alert('Failed to delete post. ' + (err.response?.data?.message || 'Please try again.'));
+        }
       }
     }
   };
@@ -53,11 +58,11 @@ function AdminDashboard() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900">Manage Posts</h1>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 space-y-4 sm:space-y-0">
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Manage Posts</h1>
         <Link
           to="/admin/new-post"
-          className="bg-blue-500 text-white px-6 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center"
+          className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors flex items-center justify-center sm:justify-start"
         >
           <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4" />
@@ -91,8 +96,8 @@ function AdminDashboard() {
             <tbody className="bg-white divide-y divide-gray-200">
               {posts.map((post) => (
                 <tr key={post._id} className="hover:bg-gray-50">
-                  <td className="px-6 py-4 whitespace-nowrap">
-                    <div className="text-sm font-medium text-gray-900">
+                  <td className="px-4 sm:px-6 py-4 whitespace-normal sm:whitespace-nowrap">
+                    <div className="text-sm font-medium text-gray-900 line-clamp-2 sm:line-clamp-1">
                       {post.title}
                     </div>
                   </td>
