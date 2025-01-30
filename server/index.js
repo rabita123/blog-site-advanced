@@ -21,7 +21,10 @@ console.log('Files in routes directory:', fs.readdirSync(path.join(__dirname, 'r
 // CORS configuration
 const corsOptions = {
   origin: NODE_ENV === 'production' 
-    ? ['https://your-netlify-app.netlify.app'] 
+    ? [
+        'https://679ba23b137c5d86d66bd77d--inspiring-cupcake-c34f92.netlify.app',
+        /\.netlify\.app$/ // This will allow all Netlify domains
+      ]
     : ['http://localhost:5173', 'http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
