@@ -9,12 +9,26 @@ const postSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  image: {
+    type: String
+  },
   author: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
-  // Add any other fields you need
+  category: {
+    type: String,
+    required: true
+  },
+  tags: [{
+    type: String
+  }],
+  status: {
+    type: String,
+    enum: ['draft', 'published'],
+    default: 'published'
+  }
 }, {
   timestamps: true
 });

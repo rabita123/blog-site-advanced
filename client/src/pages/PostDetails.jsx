@@ -22,22 +22,20 @@ function PostDetails() {
   const commentSectionRef = useRef(null);
 
   useEffect(() => {
-    const fetchPostAndComments = async () => {
+    const fetchPost = async () => {
       try {
-        const [postRes, commentsRes] = await Promise.all([
-          axios.get(`/api/posts/${id}`),
-          axios.get(`/api/posts/${id}/comments`)
-        ]);
-        setPost(postRes.data);
-        setComments(commentsRes.data);
-        setLoading(false);
-      } catch (err) {
-        setError('Failed to fetch post details');
+        const response = await axios.get(`/api/posts/${id}`);
+        setPost(response.data);
+        setError(null);
+      } catch (error) {
+        console.error('Error fetching post:', error);
+        setError('Failed to load post details');
+      } finally {
         setLoading(false);
       }
     };
 
-    fetchPostAndComments();
+    fetchPost();
   }, [id]);
 
   const handleCommentSubmit = async (e) => {
@@ -76,19 +74,32 @@ function PostDetails() {
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
       </div>
     );
   }
 
-  if (error || !post) {
+  if (error) {
     return (
       <div className="max-w-3xl mx-auto px-4 py-8">
-        <button onClick={() => navigate(-1)} className="text-blue-500 hover:text-blue-600 mb-4">
-          ← Back
-        </button>
-        <div className="text-center py-10">
-          <p className="text-red-500">{error || 'Post not found'}</p>
+        <div className="text-center">
+          <p className="text-red-500 mb-4">{error}</p>
+          <Link to="/" className="text-blue-500 hover:text-blue-600">
+            ← Back to Home
+          </Link>
+        </div>
+      </div>
+    );
+  }
+
+  if (!post) {
+    return (
+      <div className="max-w-3xl mx-auto px-4 py-8">
+        <div className="text-center">
+          <p className="text-gray-500 mb-4">Post not found</p>
+          <Link to="/" className="text-blue-500 hover:text-blue-600">
+            ← Back to Home
+          </Link>
         </div>
       </div>
     );
@@ -100,9 +111,9 @@ function PostDetails() {
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Main Content */}
           <article className="lg:w-2/3">
-            <button onClick={() => navigate(-1)} className="text-blue-500 hover:text-blue-600 mb-8">
-              ← Back to Posts
-            </button>
+            <Link to="/" className="text-blue-500 hover:text-blue-600 mb-6 inline-block">
+              ← Back to Home
+            </Link>
 
             {/* Title Section */}
             <div 
@@ -115,7 +126,7 @@ function PostDetails() {
                 {post.title}
               </h1>
               <div className="flex items-center text-gray-600 text-sm space-x-4">
-                <span>By {post.author}</span>
+                <span>By {post.author?.name}</span>
                 <span>•</span>
                 <span>{new Date(post.createdAt).toLocaleDateString('en-US', {
                   year: 'numeric',

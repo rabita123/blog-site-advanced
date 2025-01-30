@@ -11,11 +11,11 @@ router.get('/', async (req, res) => {
     // Log the request
     console.log('GET /posts', { page, limit });
     
-    // Your database query here
     const posts = await Post.find()
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
-      .limit(limit);
+      .limit(limit)
+      .populate('author', 'name'); // Populate author details
     
     // Add total count
     const total = await Post.countDocuments();
@@ -30,6 +30,26 @@ router.get('/', async (req, res) => {
     console.error('Error fetching posts:', error);
     res.status(500).json({ 
       message: 'Error fetching posts',
+      error: error.message 
+    });
+  }
+});
+
+// Get single post by ID
+router.get('/:id', async (req, res) => {
+  try {
+    const post = await Post.findById(req.params.id)
+      .populate('author', 'name'); // Populate author details
+    
+    if (!post) {
+      return res.status(404).json({ message: 'Post not found' });
+    }
+    
+    res.json(post);
+  } catch (error) {
+    console.error('Error fetching post:', error);
+    res.status(500).json({ 
+      message: 'Error fetching post details',
       error: error.message 
     });
   }
