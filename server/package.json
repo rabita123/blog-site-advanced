@@ -4,7 +4,7 @@
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
-    "start": "NODE_ENV=production node index.js",
+    "start": "cross-env NODE_ENV=production node index.js",
     "dev": "nodemon index.js"
   },
   "dependencies": {
@@ -15,7 +15,8 @@
     "bcryptjs": "^2.4.3",
     "jsonwebtoken": "^9.0.0",
     "express-validator": "^7.0.1",
-    "nodemon": "^2.0.22"
+    "nodemon": "^2.0.22",
+    "cross-env": "^7.0.3"
   },
   "engines": {
     "node": "18.x",

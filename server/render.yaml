@@ -3,7 +3,7 @@ services:
     name: blog-backend
     env: node
     buildCommand: npm install
-    startCommand: npm run start
+    startCommand: node index.js
     envVars:
       - key: NODE_ENV
         value: production
