@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import axios from '../../utils/axios';
 import Footer from '../../components/Footer';
@@ -12,6 +12,7 @@ function Login() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { login } = useAuth();
 
   const handleSubmit = async (e) => {
@@ -25,8 +26,9 @@ function Login() {
       // Store token and user data
       login(response.data.token, response.data.user);
       
-      // Redirect to admin dashboard
-      navigate('/admin');
+      // Redirect to the page they tried to visit or admin
+      const from = location.state?.from?.pathname || '/admin';
+      navigate(from, { replace: true });
     } catch (error) {
       console.error('Login error:', error);
       setError(error.response?.data?.message || 'Failed to login');
