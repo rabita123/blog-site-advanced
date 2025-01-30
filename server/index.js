@@ -9,23 +9,28 @@ const app = express();
 connectDB();
 
 const PORT = process.env.PORT || 5000;
+const NODE_ENV = process.env.NODE_ENV || 'development';
 
-app.use(cors({
-  origin: [
-    'http://localhost:5173',
-    'http://localhost:3000',
-    'https://your-app-name.netlify.app'
-  ],
+// CORS configuration based on environment
+const corsOptions = {
+  origin: NODE_ENV === 'production' 
+    ? ['https://your-netlify-app.netlify.app'] 
+    : ['http://localhost:5173', 'http://localhost:3000'],
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
-}));
+};
 
+app.use(cors(corsOptions));
 app.use(express.json());
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', env: process.env.NODE_ENV });
+  res.json({ 
+    status: 'ok',
+    environment: NODE_ENV,
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Routes
@@ -40,5 +45,5 @@ app.use((err, req, res, next) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT} in ${process.env.NODE_ENV} mode`);
+  console.log(`Server running on port ${PORT} in ${NODE_ENV} mode`);
 }); 
