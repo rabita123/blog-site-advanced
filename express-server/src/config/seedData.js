@@ -7,31 +7,36 @@ const dummyPosts = [
     title: "Getting Started with React",
     content: "React is a popular JavaScript library for building user interfaces. It was developed by Facebook and has become one of the most widely used frontend technologies. In this post, we'll explore the basics of React and how to get started with your first React application.",
     author: "John Doe",
-    category: "Programming"
+    category: "Programming",
+    image: "https://placehold.co/600x400?text=React"
   },
   {
     title: "Introduction to MongoDB",
     content: "MongoDB is a powerful NoSQL database that offers great flexibility and scalability. It stores data in JSON-like documents, making it a perfect choice for JavaScript applications. This post covers the fundamentals of MongoDB and how to use it in your projects.",
     author: "Jane Smith",
-    category: "Database"
+    category: "Database",
+    image: "https://placehold.co/600x400?text=MongoDB"
   },
   {
     title: "Mastering Tailwind CSS",
     content: "Tailwind CSS is a utility-first CSS framework that has revolutionized how we style web applications. Instead of writing custom CSS, you can use predefined utility classes to build modern designs quickly. Learn how to leverage Tailwind CSS in your projects.",
     author: "Mike Johnson",
-    category: "Design"
+    category: "Design",
+    image: "https://tailwindcss.com/_next/static/media/social-card-large.a6e71726.jpg"
   },
   {
     title: "Node.js Best Practices",
     content: "Node.js has become the go-to runtime for building scalable backend applications. This post discusses best practices for building robust Node.js applications, including error handling, async/await patterns, and project structure.",
     author: "Sarah Wilson",
-    category: "Backend"
+    category: "Backend",
+    image: "https://nodejs.org/static/images/logo-hexagon-card.png"
   },
   {
     title: "Understanding JWT Authentication",
     content: "JSON Web Tokens (JWT) provide a secure way to handle authentication in modern web applications. This guide explains how JWT works, its benefits, and how to implement JWT authentication in your applications.",
     author: "Alex Brown",
-    category: "Security"
+    category: "Security",
+    image: "https://cdn.auth0.com/blog/jwtalgos/logo.png"
   }
 ];
 

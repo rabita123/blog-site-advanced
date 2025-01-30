@@ -7,6 +7,7 @@ const postRoutes = require('./routes/posts');
 const authRoutes = require('./routes/auth');
 const commentRoutes = require('./routes/comments');
 const metricsRoutes = require('./routes/metrics');
+const path = require('path');
 
 const app = express();
 
@@ -31,7 +32,14 @@ mongoose.connection.once('open', () => {
 });
 
 // Middleware
-app.use(cors());
+const corsOptions = {
+  origin: ['http://localhost:5173', 'http://localhost:5174'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+};
+
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
@@ -41,6 +49,9 @@ app.use((req, res, next) => {
   console.log('Request body:', req.body);
   next();
 });
+
+// Add this after your middleware setup
+app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
 // Basic route
 app.get('/', (req, res) => {

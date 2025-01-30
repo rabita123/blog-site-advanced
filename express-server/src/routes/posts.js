@@ -4,9 +4,8 @@ const Post = require('../models/Post');
 const auth = require('../middleware/auth');
 const checkRole = require('../middleware/checkRole');
 const upload = require('../config/multer');
-
-// Serve static files
-router.use('/uploads', express.static('public/uploads'));
+const path = require('path');
+const fs = require('fs');
 
 // GET /api/posts - Fetch all posts with search, filter, and pagination
 router.get('/', async (req, res) => {
@@ -41,7 +40,21 @@ router.get('/', async (req, res) => {
       .skip(skip)
       .limit(parseInt(limit));
 
-    // Send pagination metadata
+    // Debug logs
+    console.log('\n=== Posts from Database ===');
+    posts.forEach(post => {
+      console.log({
+        id: post._id,
+        title: post.title,
+        image: post.image,
+        author: post.author,
+        category: post.category,
+        createdAt: post.createdAt
+      });
+    });
+    console.log('=========================\n');
+
+    // Send response
     res.json({
       posts,
       currentPage: parseInt(page),
@@ -49,6 +62,7 @@ router.get('/', async (req, res) => {
       totalPosts: total
     });
   } catch (error) {
+    console.error('Error fetching posts:', error);
     res.status(500).json({ message: error.message });
   }
 });
@@ -78,16 +92,13 @@ router.post('/',
     try {
       const { title, content, author, category } = req.body;
 
-      if (!title || !content) {
-        return res.status(400).json({ message: 'Title and content are required' });
-      }
-
+      // Create post with proper image URL
       const post = new Post({
         title,
         content,
         author: author || req.user.username,
         category,
-        image: req.file ? `/api/posts/uploads/${req.file.filename}` : null
+        image: req.file ? `/uploads/${req.file.filename}` : null // Store relative path
       });
 
       const savedPost = await post.save();
@@ -104,20 +115,19 @@ router.put('/:id',
   upload.single('image'), 
   async (req, res) => {
     try {
-      const { title, content, author, category } = req.body;
-      
       const post = await Post.findById(req.params.id);
       if (!post) {
         return res.status(404).json({ message: 'Post not found' });
       }
 
-      // Update fields
-      if (title) post.title = title;
-      if (content) post.content = content;
-      if (author) post.author = author;
-      if (category) post.category = category;
+      post.title = req.body.title || post.title;
+      post.content = req.body.content || post.content;
+      post.author = req.body.author || post.author;
+      post.category = req.body.category || post.category;
+
       if (req.file) {
-        post.image = `/api/posts/uploads/${req.file.filename}`;
+        // Use relative path for image
+        post.image = `/uploads/${req.file.filename}`;
       }
 
       const updatedPost = await post.save();
