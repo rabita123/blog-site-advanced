@@ -3,7 +3,7 @@ services:
     name: blog-backend
     env: node
     buildCommand: npm install
-    startCommand: node index.js
+    startCommand: npm run start
     envVars:
       - key: NODE_ENV
         value: production
@@ -15,4 +15,4 @@ services:
         value: 8080
     healthCheckPath: /api/health
     runtime: node
-    nodeVersion: 18
+    nodeVersion: 18.x
