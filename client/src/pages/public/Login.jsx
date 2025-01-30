@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import axios from '../../utils/axios';
 import Footer from '../../components/Footer';
 
 function Login() {
@@ -9,17 +10,36 @@ function Login() {
     password: ''
   });
   const [error, setError] = useState('');
-  const { login } = useAuth();
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await login(formData);
-      navigate('/admin');
-    } catch (err) {
-      setError(err.response?.data?.message || 'Failed to login');
+      setError('');
+      setLoading(true);
+      
+      const response = await axios.post('/api/auth/login', formData);
+      
+      // Store token and user data
+      login(response.data.token, response.data.user);
+      
+      // Redirect to dashboard
+      navigate('/dashboard');
+    } catch (error) {
+      console.error('Login error:', error);
+      setError(error.response?.data?.message || 'Failed to login');
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleChange = (e) => {
+    setFormData(prev => ({
+      ...prev,
+      [e.target.name]: e.target.value
+    }));
   };
 
   return (
@@ -50,8 +70,9 @@ function Login() {
                 <div className="mt-1">
                   <input
                     type="email"
+                    name="email"
                     value={formData.email}
-                    onChange={(e) => setFormData(prev => ({ ...prev, email: e.target.value }))}
+                    onChange={handleChange}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white transition-colors duration-200"
                     placeholder="Enter your email"
                     required
@@ -66,8 +87,9 @@ function Login() {
                 <div className="mt-1">
                   <input
                     type="password"
+                    name="password"
                     value={formData.password}
-                    onChange={(e) => setFormData(prev => ({ ...prev, password: e.target.value }))}
+                    onChange={handleChange}
                     className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-700 dark:text-white transition-colors duration-200"
                     placeholder="Enter your password"
                     required
@@ -79,9 +101,10 @@ function Login() {
             <div>
               <button
                 type="submit"
-                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3.5 rounded-lg font-semibold shadow-lg hover:from-blue-700 hover:to-indigo-700 focus:ring-4 focus:ring-blue-500/50 transform hover:scale-[1.02] transition-all duration-200"
+                disabled={loading}
+                className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3.5 rounded-lg font-semibold shadow-lg hover:from-blue-700 hover:to-indigo-700 focus:ring-4 focus:ring-blue-500/50 transform hover:scale-[1.02] transition-all duration-200 disabled:opacity-50"
               >
-                Sign in to your account
+                {loading ? 'Signing in...' : 'Sign in to your account'}
               </button>
             </div>
           </form>
