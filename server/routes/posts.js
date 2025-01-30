@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+const Post = require('../models/Post');
 
 // Get all posts with pagination
 router.get('/', async (req, res) => {
@@ -16,10 +17,21 @@ router.get('/', async (req, res) => {
       .skip((page - 1) * limit)
       .limit(limit);
     
-    res.json(posts);
+    // Add total count
+    const total = await Post.countDocuments();
+    
+    res.json({
+      posts,
+      currentPage: page,
+      totalPages: Math.ceil(total / limit),
+      totalPosts: total
+    });
   } catch (error) {
     console.error('Error fetching posts:', error);
-    res.status(500).json({ message: 'Error fetching posts' });
+    res.status(500).json({ 
+      message: 'Error fetching posts',
+      error: error.message 
+    });
   }
 });
 
