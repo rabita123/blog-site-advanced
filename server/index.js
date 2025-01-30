@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const connectDB = require('./config/db');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 
@@ -12,7 +13,12 @@ connectDB();
 const PORT = process.env.PORT || 5000;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-// CORS configuration based on environment
+// Debug: Print current directory and files
+console.log('Current directory:', __dirname);
+console.log('Files in current directory:', fs.readdirSync(__dirname));
+console.log('Files in routes directory:', fs.readdirSync(path.join(__dirname, 'routes')));
+
+// CORS configuration
 const corsOptions = {
   origin: NODE_ENV === 'production' 
     ? ['https://your-netlify-app.netlify.app'] 
@@ -34,10 +40,25 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Routes
-app.use('/api/auth', require(path.join(__dirname, 'routes', 'auth')));
-app.use('/api/posts', require(path.join(__dirname, 'routes', 'posts')));
-// ... other routes
+// Try catch block for routes
+try {
+  const authPath = path.join(__dirname, 'routes', 'auth.js');
+  const postsPath = path.join(__dirname, 'routes', 'posts.js');
+  
+  console.log('Auth route path:', authPath);
+  console.log('Posts route path:', postsPath);
+  
+  if (fs.existsSync(authPath) && fs.existsSync(postsPath)) {
+    app.use('/api/auth', require(authPath));
+    app.use('/api/posts', require(postsPath));
+  } else {
+    console.error('Route files not found!');
+    console.error('Auth exists:', fs.existsSync(authPath));
+    console.error('Posts exists:', fs.existsSync(postsPath));
+  }
+} catch (error) {
+  console.error('Error loading routes:', error);
+}
 
 // Error handling middleware
 app.use((err, req, res, next) => {
