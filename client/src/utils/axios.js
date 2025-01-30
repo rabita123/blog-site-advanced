@@ -2,17 +2,17 @@ import axios from 'axios';
 
 // Create axios instance with default config
 const instance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:5000',
   withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
   }
 });
 
-// Add a request interceptor
+// Add request interceptor for debugging
 instance.interceptors.request.use(
   (config) => {
-    // Make sure CORS credentials are included
+    console.log('Making request to:', config.url);
     config.withCredentials = true;
     const token = localStorage.getItem('token');
     if (token) {
@@ -25,10 +25,14 @@ instance.interceptors.request.use(
   }
 );
 
-// Add a response interceptor
+// Add response interceptor for debugging
 instance.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log('Response:', response.data);
+    return response;
+  },
   (error) => {
+    console.error('API Error:', error.response?.data || error.message);
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
       localStorage.removeItem('user');

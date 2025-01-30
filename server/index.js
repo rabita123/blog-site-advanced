@@ -22,10 +22,10 @@ console.log('Files in routes directory:', fs.readdirSync(path.join(__dirname, 'r
 const corsOptions = {
   origin: NODE_ENV === 'production' 
     ? [
-        'https://679ba23b137c5d86d66bd77d--inspiring-cupcake-c34f92.netlify.app',
-        /\.netlify\.app$/ // This will allow all Netlify domains
+        /\.netlify\.app$/,  // Allow all Netlify domains
+        'https://blog-site-advanced.onrender.com'
       ]
-    : ['http://localhost:5173', 'http://localhost:3000'],
+    : true, // Allow all origins in development
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
