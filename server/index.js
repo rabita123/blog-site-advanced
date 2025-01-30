@@ -31,16 +31,7 @@ const corsOptions = {
 app.use(cors(corsOptions));
 app.use(express.json());
 
-// Health check endpoint
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'ok',
-    environment: NODE_ENV,
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Try catch block for routes
+// API Routes
 try {
   const authPath = path.join(__dirname, 'routes', 'auth.js');
   const postsPath = path.join(__dirname, 'routes', 'posts.js');
@@ -59,6 +50,32 @@ try {
 } catch (error) {
   console.error('Error loading routes:', error);
 }
+
+// Root route for API health check
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'ok',
+    environment: NODE_ENV,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Root route
+app.get('/', (req, res) => {
+  res.json({ 
+    message: 'Blog API Server Running',
+    environment: NODE_ENV,
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Catch all unhandled routes
+app.use('*', (req, res) => {
+  res.status(404).json({ 
+    error: 'Not Found',
+    message: `Route ${req.originalUrl} not found`
+  });
+});
 
 // Error handling middleware
 app.use((err, req, res, next) => {
