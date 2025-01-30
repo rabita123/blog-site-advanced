@@ -1,64 +1,42 @@
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import Navbar from './components/Navbar';
-import Home from './pages/Home';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider } from './context/AuthContext';
+import PrivateRoute from './components/PrivateRoute';
+import Login from './pages/public/Login';
+import SignUp from './pages/SignUp';
+import AdminDashboard from './pages/admin/AdminDashboard';
 import PostDetails from './pages/PostDetails';
-import AdminDashboard from './pages/AdminDashboard';
 import NewPost from './pages/NewPost';
 import EditPost from './pages/EditPost';
-import Login from './pages/Login';
-import SignUp from './pages/SignUp';
-import PrivateRoute from './components/PrivateRoute';
-import { AuthProvider } from './context/AuthContext';
 import ManagePosts from './pages/ManagePosts';
+import Overview from './pages/admin/Overview';
 
 function App() {
   return (
     <AuthProvider>
       <Router>
         <div className="min-h-screen bg-gray-100">
-          <Navbar />
-          <main className="container mx-auto px-4 py-8">
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/post/:id" element={<PostDetails />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<SignUp />} />
-              
-              {/* Protected Routes */}
-              <Route
-                path="/admin"
-                element={
-                  <PrivateRoute>
-                    <AdminDashboard />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/admin/new-post"
-                element={
-                  <PrivateRoute>
-                    <NewPost />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/admin/edit/:id"
-                element={
-                  <PrivateRoute>
-                    <EditPost />
-                  </PrivateRoute>
-                }
-              />
-              <Route
-                path="/admin/manage-posts"
-                element={
-                  <PrivateRoute>
-                    <ManagePosts />
-                  </PrivateRoute>
-                }
-              />
-            </Routes>
-          </main>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<Navigate to="/admin" />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<SignUp />} />
+
+            {/* Protected Admin Routes */}
+            <Route
+              path="/admin"
+              element={
+                <PrivateRoute>
+                  <AdminDashboard />
+                </PrivateRoute>
+              }
+            >
+              <Route index element={<Overview />} />
+              <Route path="posts" element={<ManagePosts />} />
+              <Route path="new-post" element={<NewPost />} />
+              <Route path="edit/:id" element={<EditPost />} />
+              <Route path="post/:id" element={<PostDetails />} />
+            </Route>
+          </Routes>
         </div>
       </Router>
     </AuthProvider>
