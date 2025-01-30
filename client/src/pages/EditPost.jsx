@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import axios from 'axios';
+import axios from '../utils/axios';
 import PostForm from '../components/PostForm';
 
 function EditPost() {
@@ -12,7 +12,7 @@ function EditPost() {
   useEffect(() => {
     const fetchPost = async () => {
       try {
-        const response = await axios.get(`http://localhost:3000/api/posts/${id}`);
+        const response = await axios.get(`/api/posts/${id}`);
         setPost(response.data);
         setLoading(false);
       } catch (err) {

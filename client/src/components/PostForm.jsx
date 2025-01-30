@@ -37,21 +37,32 @@ function PostForm({ initialData, mode = 'create' }) {
 
     try {
       const formDataWithImage = new FormData();
-      Object.keys(formData).forEach(key => {
-        formDataWithImage.append(key, formData[key]);
-      });
+      // Append all form fields
+      formDataWithImage.append('title', formData.title);
+      formDataWithImage.append('content', formData.content);
+      formDataWithImage.append('author', formData.author);
+      formDataWithImage.append('category', formData.category);
+      
+      // Append image if exists
       if (image) {
         formDataWithImage.append('image', image);
       }
 
+      const config = {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      };
+
       if (mode === 'create') {
-        await axios.post('/api/posts', formDataWithImage);
+        await axios.post('/api/posts', formDataWithImage, config);
       } else {
-        await axios.put(`/api/posts/${initialData._id}`, formDataWithImage);
+        await axios.put(`/api/posts/${initialData._id}`, formDataWithImage, config);
       }
-      navigate('/admin');
+      navigate('/admin/manage-posts');
     } catch (err) {
       setError(err.response?.data?.message || `Failed to ${mode} post`);
+      console.error('Error:', err);
     } finally {
       setLoading(false);
     }
@@ -142,7 +153,7 @@ function PostForm({ initialData, mode = 'create' }) {
           </select>
         </div>
 
-        <div>
+        <div className="mb-6">
           <label className="block text-sm font-medium text-gray-700 mb-2">
             Post Image
           </label>
@@ -152,10 +163,10 @@ function PostForm({ initialData, mode = 'create' }) {
             onChange={handleImageChange}
             className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
           />
-          {imagePreview && (
-            <div className="mt-2">
+          {(imagePreview || initialData?.image) && (
+            <div className="mt-4">
               <img
-                src={imagePreview}
+                src={imagePreview || initialData?.image}
                 alt="Preview"
                 className="max-h-48 rounded-lg shadow-sm"
               />

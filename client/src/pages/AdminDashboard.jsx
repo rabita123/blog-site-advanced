@@ -192,101 +192,103 @@ function AdminDashboard() {
   }
 
   return (
-    <Box sx={{ display: 'flex' }}>
-      {/* Drawer */}
-      <Drawer
-        variant="temporary"
-        open={drawerOpen}
-        onClose={() => setDrawerOpen(false)}
-        sx={{
-          width: 240,
-          flexShrink: 0,
-          '& .MuiDrawer-paper': {
+    <div className="lg:ml-64 transition-all duration-300">
+      <Box sx={{ display: 'flex' }}>
+        {/* Drawer */}
+        <Drawer
+          variant="temporary"
+          open={drawerOpen}
+          onClose={() => setDrawerOpen(false)}
+          sx={{
             width: 240,
-            boxSizing: 'border-box',
-          },
-        }}
-      >
-        <List>
-          <ListItem button>
-            <ListItemIcon><DashboardIcon /></ListItemIcon>
-            <ListItemText primary="Dashboard" />
-          </ListItem>
-          <ListItem button component={Link} to="/admin/new-post">
-            <ListItemIcon><ArticleIcon /></ListItemIcon>
-            <ListItemText primary="Posts" />
-          </ListItem>
-          <ListItem button>
-            <ListItemIcon><PeopleIcon /></ListItemIcon>
-            <ListItemText primary="Users" />
-          </ListItem>
-          <ListItem button>
-            <ListItemIcon><SettingsIcon /></ListItemIcon>
-            <ListItemText primary="Settings" />
-          </ListItem>
-        </List>
-      </Drawer>
+            flexShrink: 0,
+            '& .MuiDrawer-paper': {
+              width: 240,
+              boxSizing: 'border-box',
+            },
+          }}
+        >
+          <List>
+            <ListItem button>
+              <ListItemIcon><DashboardIcon /></ListItemIcon>
+              <ListItemText primary="Dashboard" />
+            </ListItem>
+            <ListItem button component={Link} to="/admin/new-post">
+              <ListItemIcon><ArticleIcon /></ListItemIcon>
+              <ListItemText primary="Posts" />
+            </ListItem>
+            <ListItem button>
+              <ListItemIcon><PeopleIcon /></ListItemIcon>
+              <ListItemText primary="Users" />
+            </ListItem>
+            <ListItem button>
+              <ListItemIcon><SettingsIcon /></ListItemIcon>
+              <ListItemText primary="Settings" />
+            </ListItem>
+          </List>
+        </Drawer>
 
-      {/* Main content */}
-      <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-        <AppBar position="static" color="default" elevation={0}>
-          <Toolbar>
-            <IconButton
-              edge="start"
-              color="inherit"
-              onClick={() => setDrawerOpen(true)}
-              sx={{ mr: 2, display: { sm: 'none' } }}
-            >
-              <MenuIcon />
-            </IconButton>
-            <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-              Dashboard
-            </Typography>
-            <Button
-              component={Link}
-              to="/admin/new-post"
-              startIcon={<AddIcon />}
-              variant="contained"
-              color="primary"
-            >
-              New Post
-            </Button>
-          </Toolbar>
-        </AppBar>
-
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <Droppable droppableId="widgets">
-            {(provided) => (
-              <Grid
-                container
-                spacing={3}
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                className="mt-4"
+        {/* Main content */}
+        <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+          <AppBar position="static" color="default" elevation={0}>
+            <Toolbar>
+              <IconButton
+                edge="start"
+                color="inherit"
+                onClick={() => setDrawerOpen(true)}
+                sx={{ mr: 2, display: { sm: 'none' } }}
               >
-                {widgets.map((widget, index) => (
-                  <Draggable key={widget.id} draggableId={widget.id} index={index}>
-                    {(provided) => (
-                      <Grid
-                        item
-                        xs={12}
-                        md={widget.id === 'stats' ? 12 : 6}
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                      >
-                        {renderWidget(widget)}
-                      </Grid>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-              </Grid>
-            )}
-          </Droppable>
-        </DragDropContext>
+                <MenuIcon />
+              </IconButton>
+              <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
+                Dashboard
+              </Typography>
+              <Button
+                component={Link}
+                to="/admin/new-post"
+                startIcon={<AddIcon />}
+                variant="contained"
+                color="primary"
+              >
+                New Post
+              </Button>
+            </Toolbar>
+          </AppBar>
+
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <Droppable droppableId="widgets">
+              {(provided) => (
+                <Grid
+                  container
+                  spacing={3}
+                  {...provided.droppableProps}
+                  ref={provided.innerRef}
+                  className="mt-4"
+                >
+                  {widgets.map((widget, index) => (
+                    <Draggable key={widget.id} draggableId={widget.id} index={index}>
+                      {(provided) => (
+                        <Grid
+                          item
+                          xs={12}
+                          md={widget.id === 'stats' ? 12 : 6}
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                        >
+                          {renderWidget(widget)}
+                        </Grid>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </Grid>
+              )}
+            </Droppable>
+          </DragDropContext>
+        </Box>
       </Box>
-    </Box>
+    </div>
   );
 }
 
