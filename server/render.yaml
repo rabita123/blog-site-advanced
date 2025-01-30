@@ -3,7 +3,7 @@ services:
     name: blog-backend
     env: node
     buildCommand: npm install
-    startCommand: node index.js
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
@@ -13,3 +13,4 @@ services:
         sync: false
       - key: PORT
         value: 8080
+    healthCheckPath: /api/health
