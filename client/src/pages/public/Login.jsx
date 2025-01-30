@@ -25,8 +25,8 @@ function Login() {
       // Store token and user data
       login(response.data.token, response.data.user);
       
-      // Redirect to dashboard
-      navigate('/dashboard');
+      // Redirect to admin dashboard
+      navigate('/admin');
     } catch (error) {
       console.error('Login error:', error);
       setError(error.response?.data?.message || 'Failed to login');
